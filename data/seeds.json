@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SEED-057",
+    "features": {
+      "material": "ダミー: 樹脂封止パッケージ",
+      "shape": "ダミー: 角形",
+      "boardId": "BRD-057",
+      "requestType": "断面観察",
+      "sectionSpec": "A-A'",
+      "customer": "ダミー商社A",
+      "isNewCustomer": false
+    },
+    "whatDocSaid": "資料では板厚1.0mmとされていた",
+    "whatActuallyHappened": "実物は0.8mmで、想定研磨量を超えて目標断面を出し過ぎた",
+    "recurrenceKey": "この基盤IDは資料板厚と実物がズレる履歴。板厚は資料を信用せず実測する",
+    "lesson": "同一基盤でも断面指定が変わると基準面が変わる。前回セットアップ前提を流用しない"
+  }
+]

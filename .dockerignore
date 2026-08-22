@@ -1,0 +1,24 @@
+# Keep the build context small and secrets out of the image.
+node_modules
+.next
+.git
+.gitignore
+
+# secrets / local env — never copy into the image
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*-service-account.json
+
+# dev / test / docs cruft
+coverage
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+.claude
+.vscode
+.idea
+README.md
+docs
