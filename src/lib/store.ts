@@ -45,6 +45,39 @@ export async function setCached(key: string, warnings: Warning[]): Promise<void>
   await writeJson("cache.json", cache);
 }
 
+// 照合対象（seeds+log）が増えたら、古い即答は嘘になる。まるごと捨てる。
+export async function clearCache(): Promise<void> {
+  await writeJson("cache.json", {});
+}
+
+// ── 誤検知の抑制（学習ループの片翼）: key -> 抑制する relatedCaseId[] ─────────
+// 「誤検知」と言われた警告は、同じパターン(key)の同じ根拠(relatedCaseId)では
+// 二度と出さない。カラス自身が「同じミスを繰り返さない」ための記憶。
+export async function loadSuppress(key: string): Promise<string[]> {
+  const s = await readJson<Record<string, string[]>>("suppress.json", {});
+  return s[key] ?? [];
+}
+
+export async function addSuppress(
+  key: string,
+  relatedCaseId: string,
+): Promise<void> {
+  const s = await readJson<Record<string, string[]>>("suppress.json", {});
+  const list = s[key] ?? [];
+  if (!list.includes(relatedCaseId)) list.push(relatedCaseId);
+  s[key] = list;
+  await writeJson("suppress.json", s);
+}
+
+// キャッシュ/新規いずれの経路でも、返す直前に抑制済みを落とす。
+export function filterSuppressed(
+  warnings: Warning[],
+  suppressed: string[],
+): Warning[] {
+  if (suppressed.length === 0) return warnings;
+  return warnings.filter((w) => !suppressed.includes(w.relatedCaseId));
+}
+
 // ── 自己監視（§6.5）: 的中率 ─────────────────────────────────────────────────
 export type HitRate = { helpful: number; falsePositive: number };
 

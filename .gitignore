@@ -40,3 +40,4 @@ next-env.d.ts
 /data/log.json
 /data/cache.json
 /data/hitrate.json
+/data/suppress.json

@@ -29,8 +29,16 @@ export default function Home() {
   const [features, setFeatures] = useState<CaseFeatures>(EMPTY);
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [fromCache, setFromCache] = useState(false);
+  const [checkKey, setCheckKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 学習の入口（このケースを教訓として記録）
+  const [showLearn, setShowLearn] = useState(false);
+  const [whatHappened, setWhatHappened] = useState("");
+  const [recurrenceKey, setRecurrenceKey] = useState("");
+  const [lesson, setLesson] = useState("");
+  const [learned, setLearned] = useState(false);
 
   async function runExtract() {
     setLoading(true);
@@ -65,6 +73,7 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error ?? "照合に失敗しました");
       setWarnings(data.warnings ?? []);
       setFromCache(Boolean(data.fromCache));
+      setCheckKey(data.key ?? null);
       setStep("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -73,19 +82,58 @@ export default function Home() {
     }
   }
 
-  async function sendFeedback(kind: "helpful" | "falsePositive") {
+  async function sendFeedback(
+    kind: "helpful" | "falsePositive",
+    relatedCaseId?: string,
+    index?: number,
+  ) {
+    // 誤検知は「同じパターンで二度と出さない」ため key+根拠を添えて送る。
     await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind }),
+      body: JSON.stringify({ kind, key: checkKey, relatedCaseId }),
     });
+    if (kind === "falsePositive" && index !== undefined) {
+      setWarnings((ws) => ws.filter((_, i) => i !== index));
+    }
+  }
+
+  async function saveLesson() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/learn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          features,
+          whatActuallyHappened: whatHappened,
+          recurrenceKey,
+          lesson,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "記録に失敗しました");
+      setLearned(true);
+      setShowLearn(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
   }
 
   function reset() {
     setStep("input");
     setWarnings([]);
     setFromCache(false);
+    setCheckKey(null);
     setError(null);
+    setShowLearn(false);
+    setWhatHappened("");
+    setRecurrenceKey("");
+    setLesson("");
+    setLearned(false);
   }
 
   return (
@@ -199,11 +247,17 @@ export default function Home() {
                     <span className="font-semibold text-cyan-300">着手前の確認:</span> {w.actionBeforeStart}
                   </p>
                   <div className="mt-2 flex gap-2 text-xs">
-                    <button className="rounded border border-slate-500 px-2 py-1" onClick={() => sendFeedback("helpful")}>
+                    <button
+                      className="rounded border border-slate-500 px-2 py-1"
+                      onClick={() => sendFeedback("helpful", w.relatedCaseId)}
+                    >
                       役立った
                     </button>
-                    <button className="rounded border border-slate-500 px-2 py-1" onClick={() => sendFeedback("falsePositive")}>
-                      誤検知
+                    <button
+                      className="rounded border border-slate-500 px-2 py-1"
+                      onClick={() => sendFeedback("falsePositive", w.relatedCaseId, i)}
+                    >
+                      誤検知（次回から出さない）
                     </button>
                   </div>
                 </li>
@@ -214,6 +268,64 @@ export default function Home() {
           <p className="mt-4 text-xs text-amber-300">
             最終判断は担当者が行ってください。カラスは確認を促す提案役です。
           </p>
+
+          {/* 学習の入口：起きたミスを次回の照合対象に加える（背骨） */}
+          <div className="mt-6 rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+            {learned ? (
+              <p className="text-sm text-emerald-300">
+                教訓を記録しました。次回から、この案件も照合対象に入ります。 — 同じミスは、二度と繰り返さない。
+              </p>
+            ) : !showLearn ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-slate-300">
+                  この案件が実際にミスにつながったら、教訓としてカラスに学習させられます。
+                </p>
+                <button
+                  className="shrink-0 rounded-md border border-cyan-500 px-3 py-1.5 text-sm text-cyan-300"
+                  onClick={() => setShowLearn(true)}
+                >
+                  教訓を記録
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">
+                  この案件を教訓として記録（学習の入口）
+                </h3>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-slate-400">実際に起きたこと</span>
+                  <textarea
+                    className="h-16 w-full resize-y rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-cyan-400"
+                    placeholder="例：資料は板厚1.0mmだが実物0.8mmで研磨し過ぎた"
+                    value={whatHappened}
+                    onChange={(e) => setWhatHappened(e.target.value)}
+                  />
+                </label>
+                <Field
+                  label="再発の鍵（何を疑えば防げたか）"
+                  value={recurrenceKey}
+                  onChange={setRecurrenceKey}
+                />
+                <Field label="教訓（次回への一言）" value={lesson} onChange={setLesson} />
+                <div className="flex gap-3">
+                  <button
+                    className="rounded-md bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                    onClick={saveLesson}
+                    disabled={loading || (!whatHappened.trim() && !lesson.trim())}
+                  >
+                    {loading ? "記録中…" : "記録する"}
+                  </button>
+                  <button
+                    className="rounded-md border border-slate-600 px-4 py-2 text-sm"
+                    onClick={() => setShowLearn(false)}
+                  >
+                    やめる
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button className="mt-4 rounded-md border border-slate-600 px-4 py-2 text-sm" onClick={reset}>
             新しい案件を見る
           </button>
