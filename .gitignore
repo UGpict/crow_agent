@@ -33,8 +33,9 @@ yarn-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code harness state
-.claude/
+# claude code harness state（個人のローカル状態は無視。共有スキルだけ追跡する）
+.claude/*
+!.claude/skills/
 
 # runtime data — seeds.json is tracked; these are written while running
 /data/log.json
