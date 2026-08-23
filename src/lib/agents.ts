@@ -80,5 +80,9 @@ export async function refute(
     systemInstruction: REFUTE_SYS,
     userText: JSON.stringify({ features, candidates, relatedCases }, null, 2),
   });
-  return out.warnings ?? [];
+  // 堀の担保：反証役に実際に渡した過去案件だけを根拠に許す。
+  // モデルが存在しない relatedCaseId を混ぜても、幻の引用は捨てる
+  // （「根拠のない警告は禁止」を server 側で強制する）。
+  const groundedIds = new Set(relatedCases.map((c) => c.id));
+  return (out.warnings ?? []).filter((w) => groundedIds.has(w.relatedCaseId));
 }
