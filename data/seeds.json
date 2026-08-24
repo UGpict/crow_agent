@@ -2,17 +2,73 @@
   {
     "id": "SEED-057",
     "features": {
-      "material": "ダミー: 樹脂封止パッケージ",
-      "shape": "ダミー: 角形",
+      "material": "樹脂封止パッケージ（QFP）",
+      "shape": "角形パッケージ",
       "boardId": "BRD-057",
       "requestType": "断面観察",
       "sectionSpec": "A-A'",
-      "customer": "ダミー商社A",
-      "isNewCustomer": false
+      "customer": "商社A（半導体）",
+      "isNewCustomer": false,
+      "requiredPrecision": "目標断面 ±20µm",
+      "notes": "代表サンプル。実データ差し替え前提（docs/design-v0.1.md §11）"
     },
-    "whatDocSaid": "資料では板厚1.0mmとされていた",
-    "whatActuallyHappened": "実物は0.8mmで、想定研磨量を超えて目標断面を出し過ぎた",
-    "recurrenceKey": "この基盤IDは資料板厚と実物がズレる履歴。板厚は資料を信用せず実測する",
-    "lesson": "同一基盤でも断面指定が変わると基準面が変わる。前回セットアップ前提を流用しない"
+    "whatDocSaid": "資料では板厚1.0mm、A-A'断面で観察指定。前回と同じ段取りで通る想定。",
+    "whatActuallyHappened": "実物は板厚0.8mm。前回セットアップの研磨量をそのまま流用し、目標断面を出し過ぎた。",
+    "recurrenceKey": "BRD-057は資料板厚と実物がズレる履歴あり。板厚は資料を信用せず実測してから研磨量を決める。",
+    "lesson": "同一基盤でも断面指定が変わると基準面が変わる。前回セットアップ前提を流用しない。"
+  },
+  {
+    "id": "SEED-034",
+    "features": {
+      "material": "セラミックパッケージ",
+      "shape": "角形パッケージ",
+      "boardId": "BRD-034",
+      "requestType": "断面観察",
+      "sectionSpec": "中央クラック部",
+      "customer": "新規メーカーX",
+      "isNewCustomer": true,
+      "requiredPrecision": "クラック先端を割らずに露出",
+      "notes": "代表サンプル。①新規客なのに常連扱いの類型。"
+    },
+    "whatDocSaid": "「他社と同じやり方で」という口頭指示のみ。受け入れ基準・NG例は資料に明記なし。",
+    "whatActuallyHappened": "実績が無いのに常連の標準フローで研磨。客先の想定はクラック先端の保持で、狙いがズレて手戻り。",
+    "recurrenceKey": "新規客は「いつも通り」の前提が存在しない。要求精度・受け入れ基準・NG例を着手前に必ず書面で確認する。",
+    "lesson": "実績ゼロの客先を、黙って常連の標準フローに乗せない。合意を先に取る。"
+  },
+  {
+    "id": "SEED-088",
+    "features": {
+      "material": "多層プリント基板（PCB）",
+      "shape": "矩形基板",
+      "boardId": "BRD-088",
+      "requestType": "特定カット",
+      "sectionSpec": "ビアB12断面",
+      "customer": "商社A（半導体）",
+      "isNewCustomer": false,
+      "requiredPrecision": "対象ビア中心 ±30µm",
+      "notes": "代表サンプル。③資料-実物ズレ常習（座標系）の類型。"
+    },
+    "whatDocSaid": "図面のビア座標を信頼して位置決め。",
+    "whatActuallyHappened": "実装ズレで図面座標と実物が約0.3mm差。図面通りに切って対象ビアを外した。",
+    "recurrenceKey": "この客先/基盤は図面座標と実装実物がズレる常習。カット位置は図面だけで決めず、現物マーキングで再確認する。",
+    "lesson": "資料の寸法・座標は実物照合してから確定。図面値の丸呑みは禁止。"
+  },
+  {
+    "id": "SEED-121",
+    "features": {
+      "material": "樹脂封止パッケージ（BGA）",
+      "shape": "角形パッケージ",
+      "boardId": "BRD-121",
+      "requestType": "SEM用試料",
+      "sectionSpec": "はんだボール断面",
+      "customer": "メーカーY",
+      "isNewCustomer": false,
+      "requiredPrecision": "ボイド観察用に鏡面・ダレなし",
+      "notes": "代表サンプル。②同じモノ・別依頼（仕上げ基準の流用）の類型。"
+    },
+    "whatDocSaid": "前回は同基盤で光学の断面観察だったので、同じ仕上げでよいと解釈。",
+    "whatActuallyHappened": "SEM用は要求仕上げが異なり（ダレ・加工変質層NG）、光学用の仕上げを流用してボイド判定が不能に。",
+    "recurrenceKey": "同一基盤でも依頼種別（光学断面観察↔SEM試料）が変わると要求仕上げが変わる。前回の仕上げ条件を流用しない。",
+    "lesson": "「基盤が同じ＝手順が同じ」ではない。依頼種別ごとに仕上げ基準を引き直す。"
   }
 ]
